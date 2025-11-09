@@ -26,6 +26,26 @@ def round_decimal(value):
     except (ValueError, TypeError):
         return value
 
+def convert_date_format(value):
+    """Convert date from DD.MM.YY to DD/MM/YYYY format"""
+    if value is None:
+        return None
+    
+    # If it's a time object (Excel interpreted DD.MM.YY as HH:MM:SS)
+    if hasattr(value, 'hour') and hasattr(value, 'minute'):
+        day = value.hour
+        month = value.minute
+        year = value.second
+        # Convert 2-digit year to 4-digit year
+        if year < 50:
+            year = 2000 + year
+        else:
+            year = 1900 + year
+        return f"{day:02d}/{month:02d}/{year}"
+    
+    # Handle other formats...
+    return value
+    
 def create_coretax_template():
     """
     Create Coretax template structure from scratch
@@ -98,6 +118,11 @@ def convert_invoice_to_coretax(sample_file_path, output_file_path):
         # Copy columns A to Q (columns 1 to 17)
         for col in range(1, 18):
             value = sample_sheet.cell(sample_row, col).value
+            
+            # Convert date format for column B (Tanggal Faktur)
+            if col == 2:  # Column B
+                value = convert_date_format(value)
+            
             faktur_sheet.cell(faktur_row, col).value = value
         faktur_row += 1
     

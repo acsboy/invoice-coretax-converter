@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice to Coretax Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .alert-error {
+            background-color: #fee;
+            border-left: 4px solid #e53e3e;
+            color: #c53030;
+        }
+
+        .alert-success {
+            background-color: #efe;
+            border-left: 4px solid #38a169;
+            color: #276749;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .upload-section {
+            margin-bottom: 25px;
+        }
+
+        .upload-section label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            background: #f7fafc;
+            border: 3px dashed #cbd5e0;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 150px;
+        }
+
+        .file-input-label:hover {
+            background: #edf2f7;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .file-input-label.has-file {
+            background: #ebf8ff;
+            border-color: #4299e1;
+            border-style: solid;
+        }
+
+        .file-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-icon {
+            font-size: 48px;
+        }
+
+        .file-text {
+            color: #4a5568;
+            font-size: 16px;
+        }
+
+        .file-hint {
+            color: #718096;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .file-input-label.has-file .file-text {
+            color: #2c5282;
+            font-weight: 600;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 20px;
+        }
+
+        .submit-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .submit-button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .info-box {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 25px;
+            font-size: 13px;
+            color: #1e40af;
+        }
+
+        .info-box h3 {
+            margin-bottom: 10px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+        }
+
+        .info-box li {
+            margin-bottom: 5px;
+        }
+
+        .success-box {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #166534;
+        }
+
+        .success-box h3 {
+            margin-bottom: 8px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loader.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .file-input-label {
+                min-height: 120px;
+                padding: 20px;
+            }
+
+            .file-icon {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Invoice to Coretax</h1>
+            <p>Konversi Invoice List ke Format Coretax Indonesia</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('convert') }}" enctype="multipart/form-data" id="uploadForm">
+            <div class="upload-section">
+                <label for="invoice_file">Upload Invoice List</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="invoice_file" name="invoice_file" accept=".xlsx" required>
+                    <label for="invoice_file" class="file-input-label" id="invoice_label">
+                        <div class="file-content">
+                            <span class="file-icon">📄</span>
+                            <span class="file-text">Klik atau drop file Invoice List di sini</span>
+                            <span class="file-hint">Format: .xlsx | Max: 16 MB</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-button" id="submitBtn">
+                🚀 Konversi ke Format Coretax
+            </button>
+        </form>
+
+        <div class="loader" id="loader">
+            <div class="spinner"></div>
+            <p>Sedang memproses konversi...</p>
+        </div>
+
+        <div class="success-box">
+            <h3>✅ Template Coretax sudah built-in!</h3>
+            <p>Anda hanya perlu upload Invoice List, template akan otomatis digunakan.</p>
+        </div>
+
+        <div class="info-box">
+            <h3>ℹ️ Cara Penggunaan:</h3>
+            <ul>
+                <li>Upload file Invoice List Anda (format .xlsx)</li>
+                <li>Klik tombol "Konversi ke Format Coretax"</li>
+                <li>File hasil konversi akan otomatis terdownload</li>
+                <li>File siap untuk di-upload ke sistem Coretax</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // File input handler
+        const invoiceInput = document.getElementById('invoice_file');
+        const invoiceLabel = document.getElementById('invoice_label');
+        const form = document.getElementById('uploadForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loader = document.getElementById('loader');
+
+        // Drag and drop support
+        invoiceLabel.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            invoiceLabel.style.borderColor = '#667eea';
+            invoiceLabel.style.background = '#edf2f7';
+        });
+
+        invoiceLabel.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            if (!invoiceInput.files.length) {
+                invoiceLabel.style.borderColor = '#cbd5e0';
+                invoiceLabel.style.background = '#f7fafc';
+            }
+        });
+
+        invoiceLabel.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                invoiceInput.files = files;
+                updateFileDisplay();
+            }
+        });
+
+        invoiceInput.addEventListener('change', updateFileDisplay);
+
+        function updateFileDisplay() {
+            if (invoiceInput.files.length > 0) {
+                const fileName = invoiceInput.files[0].name;
+                const fileSize = (invoiceInput.files[0].size / 1024 / 1024).toFixed(2);
+                invoiceLabel.classList.add('has-file');
+                invoiceLabel.querySelector('.file-text').textContent = `✓ ${fileName}`;
+                invoiceLabel.querySelector('.file-hint').textContent = `Ukuran: ${fileSize} MB`;
+            }
+        }
+
+        form.addEventListener('submit', function() {
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Memproses Konversi...';
+            loader.classList.add('active');
+        });
+    </script>
+</body>
+</html>

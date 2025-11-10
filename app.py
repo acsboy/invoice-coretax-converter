@@ -63,6 +63,9 @@ def create_coretax_template():
     # Row 1: NPWP Penjual header
     faktur_sheet['A1'] = 'NPWP Penjual'
     faktur_sheet['C1'] = '0012328415631000'
+
+    # Merge cells A1 and B1 for NPWP Penjual
+    faktur_sheet.merge_cells('A1:B1')
     
     # Row 2: Empty
     
@@ -125,6 +128,9 @@ def convert_invoice_to_coretax(sample_file_path, output_file_path):
             
             faktur_sheet.cell(faktur_row, col).value = value
         faktur_row += 1
+
+    # Add "END" in the last row of column A in Faktur sheet
+    faktur_sheet.cell(faktur_row, 1).value = "END"
     
     # Process DetailFaktur sheet
     detail_row = 2  # Start writing from row 2 in template
@@ -164,6 +170,9 @@ def convert_invoice_to_coretax(sample_file_path, output_file_path):
             detail_faktur_sheet.cell(detail_row, target_col).value = value
         
         detail_row += 1
+
+    # Add "END" in the last row of column A in DetailFaktur sheet
+    detail_faktur_sheet.cell(detail_row, 1).value = "END"
     
     # Save the output file
     template_wb.save(output_file_path)
